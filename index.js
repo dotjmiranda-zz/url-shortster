@@ -1,6 +1,7 @@
 const express = require("express");
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
+const cryptoRandomString = require("crypto-random-string");
 
 const PORT = process.env.PORT || 3000;
 
@@ -49,7 +50,22 @@ app.get("/:shortcode/stats", (req, resp, next) => {
 
 app.post("/addShortcode", (req, resp, next) => {
   if (req.body.url) {
-    if (req.body.shortcode && req.body.shortcode.length < 4) {
+    if (!req.body.shortcode) {
+      // generates 6 characters long string
+      const shortcode = cryptoRandomString({ length: 6 });
+      db.get("shortcodes")
+        .push({
+          url: req.body.url,
+          shortcode: shortcode,
+          counter: 0,
+        })
+        .write();
+      resp.json({
+        ...req.body,
+        shortcode,
+        counter: 0,
+      });
+    } else if (req.body.shortcode.length < 4) {
       const error = new Error("Shortcodes must be atleast 4 characters long");
       error.status = 400;
       next(error);
@@ -68,7 +84,7 @@ app.post("/addShortcode", (req, resp, next) => {
             counter: 0,
           })
           .write();
-        resp.json(req.body);
+        resp.json({ ...req.body, counter: 0 });
       }
     }
   } else {
