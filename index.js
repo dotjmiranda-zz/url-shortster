@@ -2,6 +2,7 @@ const express = require("express");
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
 const cryptoRandomString = require("crypto-random-string");
+const utility = require("./utility");
 
 const PORT = process.env.PORT || 3000;
 
@@ -23,7 +24,8 @@ app.get("/:shortcode", (req, resp, next) => {
     .find({ shortcode: req.params.shortcode });
 
   if (shortcode.value()) {
-    shortcode.assign({ counter: shortcode.value().counter + 1 }).write();
+    shortcode.assign(utility.updateShortcode(shortcode.value())).write();
+
     resp.redirect(shortcode.value().url);
   } else {
     // if it's not found in database
@@ -33,6 +35,7 @@ app.get("/:shortcode", (req, resp, next) => {
   }
 });
 
+// GET - shortcodes stats
 app.get("/:shortcode/stats", (req, resp, next) => {
   const shortcode = db
     .get("shortcodes")
@@ -48,23 +51,17 @@ app.get("/:shortcode/stats", (req, resp, next) => {
   }
 });
 
+// POST - add shortcode
 app.post("/addShortcode", (req, resp, next) => {
   if (req.body.url) {
     if (!req.body.shortcode) {
       // generates 6 characters long string
       const shortcode = cryptoRandomString({ length: 6, type: "alphanumeric" });
-      db.get("shortcodes")
-        .push({
-          url: req.body.url,
-          shortcode: shortcode,
-          counter: 0,
-        })
-        .write();
-      resp.json({
-        ...req.body,
-        shortcode,
-        counter: 0,
-      });
+      const newShortcode = utility.createShortcode(shortcode, req.body.url);
+
+      db.get("shortcodes").push(newShortcode).write();
+
+      resp.json(newShortcode);
     } else if (req.body.shortcode.length < 4) {
       const error = new Error("Shortcodes must be atleast 4 characters long");
       error.status = 400;
@@ -77,14 +74,12 @@ app.post("/addShortcode", (req, resp, next) => {
         error.status = 409;
         next(error);
       } else {
-        db.get("shortcodes")
-          .push({
-            url: req.body.url,
-            shortcode: req.body.shortcode,
-            counter: 0,
-          })
-          .write();
-        resp.json({ ...req.body, counter: 0 });
+        const { shortcode, url } = req.body;
+        const newShortcode = utility.createShortcode(shortcode, url);
+
+        db.get("shortcodes").push(newShortcode).write();
+
+        resp.json(newShortcode);
       }
     }
   } else {
