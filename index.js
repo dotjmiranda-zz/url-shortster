@@ -1,6 +1,7 @@
 const express = require("express");
 const low = require("lowdb");
 const FileSync = require("lowdb/adapters/FileSync");
+const cryptoRandomString = require("crypto-random-string");
 
 const PORT = process.env.PORT || 3000;
 
@@ -26,48 +27,70 @@ app.get("/:shortcode", (req, resp, next) => {
     resp.redirect(shortcode.value().url);
   } else {
     // if it's not found in database
-    const error = new Error("Not found");
+    const error = new Error("Shortcode not found");
     error.status = 404;
     next(error);
   }
 });
 
-app.get("/:shortcode/stats", (req, resp) => {
+app.get("/:shortcode/stats", (req, resp, next) => {
   const shortcode = db
     .get("shortcodes")
     .find({ shortcode: req.params.shortcode });
 
   if (shortcode.value()) {
-    resp.send(`
-        <p>Shortcode: ${shortcode.value().shortcode}</p>
-        <p>URL: ${shortcode.value().url}</p>
-        <p>Times used: ${shortcode.value().counter}</p>
-    `);
+    resp.send(shortcode.value());
   } else {
-    resp.send(
-      `<span>Shortcode <b>${req.params.shortcode}</b> does not exist</span>`
-    );
+    // if it's not found in database
+    const error = new Error("Shortcode not found");
+    error.status = 404;
+    next(error);
   }
 });
 
 app.post("/addShortcode", (req, resp, next) => {
-  if (req.body.shortcode && req.body.shortcode.length < 4)
-    resp.send("Shortcodes must be atleast 4 characters long");
-  else {
-    if (db.get("shortcodes").find({ shortcode: req.body.shortcode }).value()) {
-      const error = new Error("Already exists");
-      error.status = 409;
-      next(error);
-    } else {
+  if (req.body.url) {
+    if (!req.body.shortcode) {
+      // generates 6 characters long string
+      const shortcode = cryptoRandomString({ length: 6, type: "alphanumeric" });
       db.get("shortcodes")
         .push({
           url: req.body.url,
-          shortcode: req.body.shortcode,
+          shortcode: shortcode,
           counter: 0,
         })
         .write();
-      resp.json(req.body);
+      resp.json({
+        ...req.body,
+        shortcode,
+        counter: 0,
+      });
+    } else if (req.body.shortcode.length < 4) {
+      const error = new Error("Shortcodes must be atleast 4 characters long");
+      error.status = 400;
+      next(error);
+    } else {
+      if (
+        db.get("shortcodes").find({ shortcode: req.body.shortcode }).value()
+      ) {
+        const error = new Error("Shortcode already exists");
+        error.status = 409;
+        next(error);
+      } else {
+        db.get("shortcodes")
+          .push({
+            url: req.body.url,
+            shortcode: req.body.shortcode,
+            counter: 0,
+          })
+          .write();
+        resp.json({ ...req.body, counter: 0 });
+      }
     }
+  } else {
+    const error = new Error("Please provide an URL");
+    error.status = 400;
+    next(error);
   }
 });
 
