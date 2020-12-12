@@ -1,0 +1,9 @@
+{
+  "shortcodes": [
+    {
+      "url": "https://www.google.com/",
+      "shortcode": "google",
+      "counter": 5
+    }
+  ]
+}
