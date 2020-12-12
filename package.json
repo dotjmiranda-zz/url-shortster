@@ -1,0 +1,27 @@
+{
+  "name": "url-shortster",
+  "version": "0.0.1",
+  "description": "URL Shortening API",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dotjmiranda/url-shortster.git"
+  },
+  "author": "Dot",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dotjmiranda/url-shortster/issues"
+  },
+  "homepage": "https://github.com/dotjmiranda/url-shortster#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "lowdb": "^1.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.6"
+  }
+}
