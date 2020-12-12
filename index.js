@@ -15,17 +15,17 @@ app.use(express.urlencoded({ extended: true }));
 // Set defaults for the JSON file (in case it's empty)
 db.defaults({ shortcodes: [] }).write();
 
+// GET - redirects to shortcode's url
 app.get("/:shortcode", (req, resp, next) => {
   let shortcode = db
     .get("shortcodes")
     .find({ shortcode: req.params.shortcode });
 
   if (shortcode.value()) {
-    const newCounter = shortcode.value().counter + 1;
-    console.log(newCounter);
-    shortcode.assign({ counter: newCounter }).write();
+    shortcode.assign({ counter: shortcode.value().counter + 1 }).write();
     resp.redirect(shortcode.value().url);
   } else {
+    // if it's not found in database
     const error = new Error("Not found");
     error.status = 404;
     next(error);
