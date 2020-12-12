@@ -52,7 +52,7 @@ app.post("/addShortcode", (req, resp, next) => {
   if (req.body.url) {
     if (!req.body.shortcode) {
       // generates 6 characters long string
-      const shortcode = cryptoRandomString({ length: 6 });
+      const shortcode = cryptoRandomString({ length: 6, type: "alphanumeric" });
       db.get("shortcodes")
         .push({
           url: req.body.url,
