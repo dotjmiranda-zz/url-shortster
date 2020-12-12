@@ -20,17 +20,13 @@ const errorHandler = (error, req, resp) => {
   resp.send("Internal Server Error");
 };
 
-app.get("/", (req, resp) => {
-  resp.send("<h1>Hello World</h1>");
-});
-
 app.get("/:shortcode", (req, resp) => {
   let shortcode = db
     .get("shortcodes")
     .find({ shortcode: req.params.shortcode });
 
   if (shortcode.value()) {
-    let newCounter = shortcode.value().counter + 1;
+    const newCounter = shortcode.value().counter + 1;
     console.log(newCounter);
     shortcode.assign({ counter: newCounter }).write();
     resp.redirect(shortcode.value().url);
@@ -42,7 +38,7 @@ app.get("/:shortcode", (req, resp) => {
 });
 
 app.get("/:shortcode/stats", (req, resp) => {
-  let shortcode = db
+  const shortcode = db
     .get("shortcodes")
     .find({ shortcode: req.params.shortcode });
 
@@ -60,7 +56,8 @@ app.get("/:shortcode/stats", (req, resp) => {
 });
 
 app.post("/addShortcode", (req, resp) => {
-  if (req.body.shortcode.length < 4) resp.send("4+");
+  if (req.body.shortcode && req.body.shortcode.length < 4)
+    resp.send("Shortcodes must be atleast 4 characters long");
   else {
     if (db.get("shortcodes").find({ shortcode: req.body.shortcode }).value())
       resp.send("ALREADY HAS");
