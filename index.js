@@ -4,8 +4,6 @@ const FileSync = require("lowdb/adapters/FileSync");
 const cryptoRandomString = require("crypto-random-string");
 const utility = require("./utility");
 
-const PORT = process.env.PORT || 3000;
-
 const app = express();
 const adapter = new FileSync("db.json");
 const db = low(adapter);
@@ -26,7 +24,8 @@ app.get("/:shortcode", (req, resp, next) => {
   if (shortcode.value()) {
     shortcode.assign(utility.updateShortcode(shortcode.value())).write();
 
-    resp.redirect(shortcode.value().url);
+    //resp.status(200);
+    resp.status(200).redirect(shortcode.value().url);
   } else {
     // if it's not found in database
     const error = new Error("Shortcode not found");
@@ -42,7 +41,8 @@ app.get("/:shortcode/stats", (req, resp, next) => {
     .find({ shortcode: req.params.shortcode });
 
   if (shortcode.value()) {
-    resp.send(shortcode.value());
+    //resp.status(200);
+    resp.status(200).send(shortcode.value());
   } else {
     // if it's not found in database
     const error = new Error("Shortcode not found");
@@ -108,4 +108,4 @@ app.use((err, req, resp, next) => {
   next();
 });
 
-app.listen(PORT, () => console.log(`Running on http://localhost:${PORT}`));
+module.exports = { db, app };
